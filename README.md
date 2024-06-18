@@ -3,9 +3,12 @@
 
 # Installation
 
-## Local Installation (TL;DR version)
+This is a simple streamlit app. The following installation instructions use the Conda package 
+manager. The instructions also work verbatim with `Mamba` and `micromamba`.
 
-1. Clone the repo: 
+## Local Installation
+
+Clone the repo: 
 
 ```
 git clone [repo_url]
@@ -17,7 +20,7 @@ While in the repository directory, run the following command in a terminal:
 
 ```
 conda create -n aiewf --yes --file conda_packages.txt -c conda-forge
-conda activate wise_env
+conda activate aiewf
 ```
 
 ### Run the app:

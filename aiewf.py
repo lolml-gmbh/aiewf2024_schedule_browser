@@ -1,4 +1,4 @@
-# Copyright (c) 2024 [LOLML GmbH](https://lolml.com/), Julian Wergieluk, George Whelan
+# Copyright (c) 2024 LOLML GmbH (https://lolml.com/), Julian Wergieluk, George Whelan
 import json
 
 import pandas as pd
@@ -25,8 +25,8 @@ class AIEWF:
         data = json.loads(json_str)
         try:
             events = data["props"]["pageProps"]["schedule"]["events"]
-        except KeyError:
-            raise ValueError("Data has an unexpected format")
+        except KeyError as e:
+            raise ValueError("Data has an unexpected format") from e
 
         event_cols = [
             "title",
@@ -65,3 +65,11 @@ class AIEWF:
         self.company_df = pd.DataFrame.from_records(
             list(self.company_dict.values()), columns=["name", "link", "socialLinks"]
         )
+
+    @property
+    def num_presenters(self) -> int:
+        return len(self.presenter_df["name"].unique())
+
+    @property
+    def num_events(self) -> int:
+        return len(self.event_df)
