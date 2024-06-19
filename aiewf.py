@@ -65,6 +65,7 @@ class AIEWF:
         self.event_df["room"] = self.event_df["room"].fillna("Unknown")
         self.event_df["presenters"] = self.event_df["presenters"].fillna("NA")
         self.event_df["company"] = self.event_df["company"].fillna("NA")
+        self.event_df["about"] = self.event_df["about"].fillna("")
         self.presenter_df = pd.DataFrame.from_records(
             list(self.presenter_dict.values()), columns=["name", "tagline", "about", "socialLinks"]
         )

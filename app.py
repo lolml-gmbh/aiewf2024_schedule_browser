@@ -30,7 +30,7 @@ App made by: [Julian Wergieluk](https://www.linkedin.com/in/julian-wergieluk/) +
 [George Whelan](https://www.linkedin.com/in/george-whelan-30582720/) = 
 [LOLML GmbH](https://lolml.com/)
 """
-st.set_page_config(page_title=APP_TITLE, page_icon=":rocket:")
+st.set_page_config(page_title=APP_TITLE, page_icon=":rocket:", layout="wide")
 
 
 @st.cache_resource(show_spinner="Downloading data from ai.engineer ..")
@@ -119,7 +119,7 @@ def main() -> None:
 
     st.subheader("Filters")
 
-    st.caption("Empty filter will select all data")
+    st.caption("Empty filter will select all avaiable data")
 
     selected_tracks = st.multiselect("Track", db.tracks)
     selected_dates = st.multiselect("Date", db.dates)
@@ -136,19 +136,22 @@ def main() -> None:
         event_base_name += f"_tracks_{selected_tracks_str}"
     if selected_dates:
         event_df = event_df[db.event_df["date"].isin(selected_dates)]
-        selected_dates_str = "-".join(selected_dates)
+        selected_dates_str = "-".join([f"{d:%d}" for d in selected_dates])
         event_base_name += f"_dates_{selected_dates_str}"
     if selected_rooms:
         event_df = event_df[db.event_df["room"].isin(selected_rooms)]
         selected_rooms_str = "-".join(selected_rooms)
-        event_base_name += f"_rooms-{selected_rooms_str}"
+        event_base_name += f"_rooms_{selected_rooms_str}"
     if selected_companies:
         event_df = event_df[db.event_df["company"].isin(selected_companies)]
         selected_companies_str = "-".join(selected_companies)
-        event_base_name += f"_companies-{selected_companies_str}"
-    st.dataframe(event_df, hide_index=True)
+        event_base_name += f"_companies_{selected_companies_str}"
 
-    display_df_download_buttons(event_df, "event_df")
+    if event_df.empty:
+        st.warning("No data found with the selected filters")
+    else:
+        st.dataframe(event_df, hide_index=True, use_container_width=True)
+        display_df_download_buttons(event_df, event_base_name)
 
     st.markdown(COPYRIGHT_LINE)
 
