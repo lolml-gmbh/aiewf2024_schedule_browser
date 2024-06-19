@@ -12,11 +12,11 @@ pd.set_option("display.max_columns", None)
 
 APP_TITLE = "AI Engineers World's Fair 2024 Schedule Browser"
 APP_DESC = """
-This is an UNOFFICIAL AI Engineer World's Fair schedule browser
+This is an UNOFFICIAL [AI Engineer World's Fair](https://www.ai.engineer/worldsfair) schedule 
+browser. The data is fetched from the 
+[official website](https://www.ai.engineer/worldsfair/2024/schedule). 
 """
 LEGAL_NOTICE = """
-Legal Notice
-
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@ App made by: [Julian Wergieluk](https://www.linkedin.com/in/julian-wergieluk/) +
 st.set_page_config(page_title=APP_TITLE, page_icon=":rocket:")
 
 
-@st.cache_data()
+@st.cache_resource(show_spinner="Downloading data from ai.engineer ..")
 def get_db() -> AIEWF:
     return AIEWF()
 
@@ -112,15 +112,48 @@ def main() -> None:
 
     db = get_db()
 
-    st.header("Events")
+    st.header("Stats")
 
     col0, col1 = st.columns(2)
     col0.metric("Events", db.num_events)
     col1.metric("Presenters", db.num_presenters)
-    st.dataframe(db.event_df)
-    display_df_download_buttons(db.event_df, "event_df")
+
+    st.subheader("Filters")
+
+    st.caption("Empty filter will select all data")
+
+    selected_tracks = st.multiselect("Track", db.tracks)
+    selected_dates = st.multiselect("Date", db.dates)
+    selected_rooms = st.multiselect("Room", db.event_rooms)
+    selected_companies = st.multiselect("Company", db.companies)
+
+    st.subheader("Event data")
+
+    event_df = db.event_df
+    event_base_name = "event_df"
+    if selected_tracks:
+        event_df = event_df[db.event_df["trackName"].isin(selected_tracks)]
+        selected_tracks_str = "-".join(selected_tracks)
+        event_base_name += f"_tracks_{selected_tracks_str}"
+    if selected_dates:
+        event_df = event_df[db.event_df["date"].isin(selected_dates)]
+        selected_dates_str = "-".join(selected_dates)
+        event_base_name += f"_dates_{selected_dates_str}"
+    if selected_rooms:
+        event_df = event_df[db.event_df["room"].isin(selected_rooms)]
+        selected_rooms_str = "-".join(selected_rooms)
+        event_base_name += f"_rooms-{selected_rooms_str}"
+    if selected_companies:
+        event_df = event_df[db.event_df["company"].isin(selected_companies)]
+        selected_companies_str = "-".join(selected_companies)
+        event_base_name += f"_companies-{selected_companies_str}"
+    st.dataframe(event_df, hide_index=True)
+
+    display_df_download_buttons(event_df, "event_df")
 
     st.markdown(COPYRIGHT_LINE)
+
+    st.write("Legal Notice")
     st.caption(LEGAL_NOTICE)
 
 

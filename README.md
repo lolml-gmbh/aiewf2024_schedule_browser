@@ -1,5 +1,14 @@
 # An unofficial AI Engineer World's Fair (2024) Schedule Browser
 
+This tool downloads and processes the schedule data of the [AI Engineer World's Fair 2024](https://www.ai.engineer/worldsfair), that 
+can be found [here](https://www.ai.engineer/worldsfair/2024/schedule).
+
+### Features
+
+* Browse the schedule.
+* Export schedule data to Excel or as a CSV file.
+* Filter the schedule by date, time, track, etc.
+* Enjoy some neat data visualizations.
 
 # Installation
 

@@ -59,6 +59,12 @@ class AIEWF:
             event_records.append(rec)
 
         self.event_df = pd.DataFrame.from_records(event_records, columns=event_cols)
+        self.event_df["since"] = pd.to_datetime(self.event_df["since"])
+        self.event_df["till"] = pd.to_datetime(self.event_df["till"])
+        self.event_df["date"] = self.event_df["since"].dt.date
+        self.event_df["room"] = self.event_df["room"].fillna("Unknown")
+        self.event_df["presenters"] = self.event_df["presenters"].fillna("NA")
+        self.event_df["company"] = self.event_df["company"].fillna("NA")
         self.presenter_df = pd.DataFrame.from_records(
             list(self.presenter_dict.values()), columns=["name", "tagline", "about", "socialLinks"]
         )
@@ -73,3 +79,19 @@ class AIEWF:
     @property
     def num_events(self) -> int:
         return len(self.event_df)
+
+    @property
+    def tracks(self) -> list[str]:
+        return self.event_df["trackName"].unique().tolist()
+
+    @property
+    def companies(self) -> list[str]:
+        return self.company_df["name"].unique().tolist()
+
+    @property
+    def event_rooms(self) -> list[str]:
+        return self.event_df["room"].unique().tolist()
+
+    @property
+    def dates(self) -> list[str]:
+        return self.event_df["date"].unique().tolist()
