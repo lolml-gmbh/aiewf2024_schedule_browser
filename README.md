@@ -6,8 +6,8 @@ can be found [here](https://www.ai.engineer/worldsfair/2024/schedule).
 ### Features
 
 * Browse the schedule.
-* Export schedule data to Excel or as a CSV file.
-* Filter by date, time, track, etc.
+* Export the schedule data to Excel or as a CSV file.
+* Filter by date, track, room, etc.
 * Enjoy some neat data visualizations. (coming soon)
 
 ### Screenshot
