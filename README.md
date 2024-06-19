@@ -7,8 +7,12 @@ can be found [here](https://www.ai.engineer/worldsfair/2024/schedule).
 
 * Browse the schedule.
 * Export schedule data to Excel or as a CSV file.
-* Filter the schedule by date, time, track, etc.
-* Enjoy some neat data visualizations.
+* Filter by date, time, track, etc.
+* Enjoy some neat data visualizations. (coming soon)
+
+### Screenshot
+
+![screenshot.png](screenshot.png)
 
 # Installation
 

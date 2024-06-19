@@ -112,11 +112,10 @@ def main() -> None:
 
     db = get_db()
 
-    st.header("Stats")
-
-    col0, col1 = st.columns(2)
-    col0.metric("Events", db.num_events)
-    col1.metric("Presenters", db.num_presenters)
+    # st.header("Stats")
+    # col0, col1 = st.columns(2)
+    # col0.metric("Events", db.num_events)
+    # col1.metric("Presenters", db.num_presenters)
 
     st.subheader("Filters")
 
