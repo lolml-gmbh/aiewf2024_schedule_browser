@@ -10,5 +10,5 @@ RUN micromamba install -y -n base -c conda-forge -c pytorch --channel-priority s
 # ARG MAMBA_DOCKERFILE_ACTIVATE=1
 # RUN pip install -r /app/pip_packages.txt --upgrade --no-cache-dir
 
-EXPOSE 8501
+EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/_entrypoint.sh", "/app/run_app.sh"]
