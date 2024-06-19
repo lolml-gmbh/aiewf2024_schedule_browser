@@ -131,19 +131,19 @@ def main() -> None:
     event_df = db.event_df
     event_base_name = "event_df"
     if selected_tracks:
-        event_df = event_df[db.event_df["trackName"].isin(selected_tracks)]
+        event_df = event_df[event_df["trackName"].isin(selected_tracks)]
         selected_tracks_str = "-".join(selected_tracks)
         event_base_name += f"_tracks_{selected_tracks_str}"
     if selected_dates:
-        event_df = event_df[db.event_df["date"].isin(selected_dates)]
+        event_df = event_df[event_df["date"].isin(selected_dates)]
         selected_dates_str = "-".join([f"{d:%d}" for d in selected_dates])
         event_base_name += f"_dates_{selected_dates_str}"
     if selected_rooms:
-        event_df = event_df[db.event_df["room"].isin(selected_rooms)]
+        event_df = event_df[event_df["room"].isin(selected_rooms)]
         selected_rooms_str = "-".join(selected_rooms)
         event_base_name += f"_rooms_{selected_rooms_str}"
     if selected_companies:
-        event_df = event_df[db.event_df["company"].isin(selected_companies)]
+        event_df = event_df[event_df["company"].isin(selected_companies)]
         selected_companies_str = "-".join(selected_companies)
         event_base_name += f"_companies_{selected_companies_str}"
 
