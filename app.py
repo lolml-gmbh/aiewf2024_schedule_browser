@@ -1,11 +1,13 @@
 # Copyright (c) 2024 LOLML GmbH (https://lolml.com/), Julian Wergieluk, George Whelan
-import io
-import re
+import os
 
 import pandas as pd
 import streamlit as st
+from dotenv import load_dotenv
 
-from aiewf import AIEWF
+from aiewf import AIEWF, convert_dataframe_to_csv, convert_dataframe_to_excel
+
+load_dotenv()
 
 pd.set_option("display.max_rows", None)
 pd.set_option("display.max_columns", None)
@@ -36,54 +38,6 @@ st.set_page_config(page_title=APP_TITLE, page_icon=":rocket:", layout="wide")
 @st.cache_resource(show_spinner="Downloading data from ai.engineer ..")
 def get_db() -> AIEWF:
     return AIEWF()
-
-
-def convert_dataframe_to_csv(df: pd.DataFrame, include_index: bool = False) -> str:
-    buffer = io.StringIO()
-    df.to_csv(buffer, index=include_index)
-    return buffer.getvalue()
-
-
-def convert_dataframe_to_excel(df: pd.DataFrame, include_index: bool = False) -> bytes:
-    buffer = io.BytesIO()
-    df.to_excel(buffer, index=include_index)
-    return buffer.getvalue()
-
-
-def clean_excel_sheet_name(input_str, sheet_index: int) -> str:
-    cleaned_str = re.sub(r'[\/:*?"<>|]', "_", input_str)
-    cleaned_str = re.sub(r'[\'"]', "", cleaned_str)
-    cleaned_str = cleaned_str.strip()
-
-    if len(cleaned_str) == 0:
-        cleaned_str = f"Sheet{sheet_index}"
-    elif len(cleaned_str) > 31:
-        cleaned_str = cleaned_str[:31]
-
-    return cleaned_str
-
-
-def convert_df_dict_to_excel(dfs: dict[str, pd.DataFrame], adjust_col_width: bool = False) -> bytes:
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer) as writer:
-        for i, (sheet_name, df) in enumerate(dfs.items()):
-            sheet_name = clean_excel_sheet_name(sheet_name, i)
-            df.to_excel(writer, sheet_name=sheet_name, index=False)
-            if not adjust_col_width:
-                continue
-            worksheet = writer.sheets[sheet_name]
-            for col_index, col in enumerate(df):
-                max_len = (
-                    max(
-                        (
-                            df[col].astype(str).map(len).max(),  # len of largest item
-                            len(str(df[col].name)),  # len of column name/header
-                        )
-                    )
-                    + 1
-                )  # adding a little extra space
-                worksheet.set_column(col_index, col_index, max_len)  # set column width
-    return buffer.getvalue()
 
 
 def display_df_download_buttons(df: pd.DataFrame, base_name: str, include_index: bool = False):
@@ -153,8 +107,18 @@ def main() -> None:
         st.dataframe(event_df, hide_index=True, use_container_width=True)
         display_df_download_buttons(event_df, event_base_name)
 
-    st.markdown(COPYRIGHT_LINE)
+    show_presenters = bool(os.getenv("SHOW_PRESENTERS", False))
+    show_companies = bool(os.getenv("SHOW_COMPANIES", False))
 
+    if show_presenters:
+        st.header("Presenters")
+        st.dataframe(db.presenter_df, hide_index=True, use_container_width=True)
+
+    if show_companies:
+        st.header("Companies")
+        st.dataframe(db.company_df, hide_index=True, use_container_width=True)
+
+    st.markdown(COPYRIGHT_LINE)
     st.write("Legal Notice")
     st.caption(LEGAL_NOTICE)
 
