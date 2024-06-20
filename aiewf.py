@@ -8,6 +8,17 @@ import requests
 from bs4 import BeautifulSoup
 
 
+def fix_social_link(link: str) -> str:
+    if not link:
+        return ""
+    link = str(link).strip()
+    if " " in link:
+        return link
+    if link.startswith("http://") or link.startswith("https://"):
+        return link
+    return f"https://{link}"
+
+
 class AIEWF:
     schedule_url = "https://www.ai.engineer/worldsfair/2024/schedule"
 
@@ -49,11 +60,16 @@ class AIEWF:
             presenter_companies = set()
             for presenter in event["presenters"]:
                 presenter_data = presenter["attributes"]
+                presenter_data["socialLinks"] = fix_social_link(
+                    presenter_data.get("socialLinks", "")
+                )
                 presenter_names.add(presenter_data["name"].strip())
                 self.presenter_dict[presenter["id"]] = presenter_data
                 company_data = presenter_data["company"]["data"]
                 company_id = company_data["id"]
                 company_data = company_data["attributes"]
+                company_data["socialLinks"] = fix_social_link(company_data.get("socialLinks", ""))
+                company_data["link"] = fix_social_link(company_data.get("link", ""))
                 presenter_data["company"] = company_data["name"]
                 presenter_companies.add(company_data["name"].strip())
                 if company_id not in self.company_dict:

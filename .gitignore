@@ -1,5 +1,6 @@
 ### project specific ignores
 
+*.xlsx
 projects/
 idoc/**/*.txt
 test/results

@@ -5,7 +5,12 @@ import pandas as pd
 import streamlit as st
 from dotenv import load_dotenv
 
-from aiewf import AIEWF, convert_dataframe_to_csv, convert_dataframe_to_excel
+from aiewf import (
+    AIEWF,
+    convert_dataframe_to_csv,
+    convert_dataframe_to_excel,
+    convert_df_dict_to_excel,
+)
 
 load_dotenv()
 
@@ -107,16 +112,29 @@ def main() -> None:
         st.dataframe(event_df, hide_index=True, use_container_width=True)
         display_df_download_buttons(event_df, event_base_name)
 
-    show_presenters = bool(os.getenv("SHOW_PRESENTERS", False))
-    show_companies = bool(os.getenv("SHOW_COMPANIES", False))
-
-    if show_presenters:
+    column_config = {
+        "link": st.column_config.LinkColumn("link"),
+        "socialLinks": st.column_config.LinkColumn("socialLinks"),
+    }
+    if bool(os.getenv("SHOW_MORE", False)):
         st.header("Presenters")
-        st.dataframe(db.presenter_df, hide_index=True, use_container_width=True)
+        st.dataframe(
+            db.presenter_df, hide_index=True, use_container_width=True, column_config=column_config
+        )
 
-    if show_companies:
         st.header("Companies")
-        st.dataframe(db.company_df, hide_index=True, use_container_width=True)
+        st.dataframe(
+            db.company_df, hide_index=True, use_container_width=True, column_config=column_config
+        )
+
+        df_dict = {"events": db.event_df, "presenters": db.presenter_df, "companies": db.company_df}
+        now_str = pd.Timestamp.now().strftime("%Y-%m-%d-%H-%M-%S")
+        st.download_button(
+            label="Download all data as Excel",
+            data=convert_df_dict_to_excel(df_dict),
+            file_name=f"{now_str}-aiewf_export.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
 
     st.markdown(COPYRIGHT_LINE)
     st.write("Legal Notice")
