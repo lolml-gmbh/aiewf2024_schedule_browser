@@ -3,7 +3,9 @@
 This tool downloads and processes the schedule data of the [AI Engineer World's Fair 2024](https://www.ai.engineer/worldsfair), that 
 can be found [here](https://www.ai.engineer/worldsfair/2024/schedule).
 
-### Features
+### Live version of the app is deployed [here](https://aiewf-kktvs627lq-uw.a.run.app/).
+
+# Features
 
 * Browse the schedule.
 * Export the schedule data to Excel or as a CSV file.

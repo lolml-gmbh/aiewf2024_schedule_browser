@@ -48,9 +48,9 @@ class AIEWF:
             "presenters",
             "company",
             "room",
+            "since",
             "link",
             "about",
-            "since",
             "till",
             "slug",
         ]

@@ -24,6 +24,8 @@ browser. The data is fetched from the
 [official website](https://www.ai.engineer/worldsfair/2024/schedule). 
 """
 LEGAL_NOTICE = """
+### Legal Notice
+
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,7 +38,10 @@ COPYRIGHT_LINE = """
 App made by: [Julian Wergieluk](https://www.linkedin.com/in/julian-wergieluk/) + 
 [George Whelan](https://www.linkedin.com/in/george-whelan-30582720/) = 
 [LOLML GmbH](https://lolml.com/)
+
+The source code is on [GitHub](https://github.com/lolml-gmbh/aiewf2024_schedule_browser)
 """
+COL_FAV = "fav"
 st.set_page_config(page_title=APP_TITLE, page_icon=":rocket:", layout="wide")
 
 
@@ -64,12 +69,55 @@ def display_df_download_buttons(df: pd.DataFrame, base_name: str, include_index:
     )
 
 
+FAV_EVENTS_FILE = "fav_events.txt"
+
+
+class FavEvents:
+    def __init__(self):
+        self.event_ids: set[str] = set()
+        self.modified = False
+        self.load()
+
+    def add(self, event_id: str) -> None:
+        self.event_ids.add(event_id)
+        self.modified = True
+
+    def remove(self, event_id: str) -> None:
+        self.event_ids.remove(event_id)
+        self.modified = True
+
+    def save(self) -> None:
+        if not self.modified:
+            return
+        with open(FAV_EVENTS_FILE, "w") as f:
+            f.write("\n".join(self.event_ids))
+
+    def load(self) -> None:
+        try:
+            with open(FAV_EVENTS_FILE) as f:
+                self.event_ids = set(f.read().splitlines())
+        except FileNotFoundError:
+            pass
+
+
 def main() -> None:
     st.title(APP_TITLE)
     st.logo("lolml.png", link="https://lolml.com/")
     st.markdown(APP_DESC)
 
+    enable_fav_events = bool(os.getenv("ENABLE_FAV_EVENTS", False))
     db = get_db()
+    if st.session_state.get("event_df", None) is None:
+        st.session_state.event_df = db.event_df.copy()
+        event_df = st.session_state.event_df
+        if enable_fav_events:
+            event_df.insert(loc=0, column="fav", value=False)
+            event_df[COL_FAV] = False
+            st.session_state.fav_events = FavEvents()
+            fav_events = st.session_state.fav_events
+            event_df.loc[event_df["title"].isin(fav_events.event_ids), COL_FAV] = True
+
+    event_df = st.session_state.event_df
     selected_tracks = st.sidebar.multiselect("Track", db.tracks)
     selected_dates = st.sidebar.multiselect("Date", db.dates)
     selected_rooms = st.sidebar.multiselect("Room", db.event_rooms)
@@ -79,7 +127,6 @@ def main() -> None:
     )
 
     st.header("Events")
-    event_df = db.event_df
     presenter_df = db.presenter_df
     company_df = db.company_df
     event_base_name = "event_df"
@@ -109,9 +156,27 @@ def main() -> None:
     if event_df.empty:
         st.warning("No data found with the selected filters")
     else:
-        st.dataframe(
-            event_df, hide_index=True, use_container_width=True, column_config=column_config
-        )
+        if enable_fav_events:
+            non_editable_cols = list(event_df.columns)
+            non_editable_cols.remove(COL_FAV)
+            st.data_editor(
+                event_df,
+                hide_index=True,
+                use_container_width=True,
+                column_config=column_config,
+                disabled=non_editable_cols,
+            )
+            fav_events = st.session_state.fav_events
+            fav_event_titles = event_df[event_df[COL_FAV]]["title"].tolist()
+            for fav_title in fav_event_titles:
+                fav_events.add(fav_title)
+            if fav_events.modified:
+                fav_events.save()
+        else:
+            st.dataframe(
+                event_df, hide_index=True, use_container_width=True, column_config=column_config
+            )
+
         display_df_download_buttons(event_df, event_base_name)
 
     if bool(os.getenv("SHOW_PRESENTERS", False)):
@@ -142,7 +207,6 @@ def main() -> None:
     st.caption("(Filters are not applied)")
 
     st.markdown(COPYRIGHT_LINE)
-    st.write("Legal Notice")
     st.caption(LEGAL_NOTICE)
 
 
