@@ -71,16 +71,15 @@ def main() -> None:
 
     db = get_db()
 
-    st.subheader("Filters")
-
-    st.caption("Empty filter will select all avaiable data")
-
     selected_tracks = st.sidebar.multiselect("Track", db.tracks)
     selected_dates = st.sidebar.multiselect("Date", db.dates)
     selected_rooms = st.sidebar.multiselect("Room", db.event_rooms)
     selected_companies = st.sidebar.multiselect("Company", db.companies)
+    st.sidebar.caption(
+        "Empty filter will select all available data. Multiple selections are supported."
+    )
 
-    st.subheader("Event data")
+    st.subheader("Events")
 
     event_df = db.event_df
     presenter_df = db.presenter_df
@@ -119,14 +118,19 @@ def main() -> None:
 
     if bool(os.getenv("SHOW_MORE", False)):
         st.header("Presenters")
-        st.dataframe(
-            presenter_df, hide_index=True, use_container_width=True, column_config=column_config
-        )
-
+        if presenter_df.empty:
+            st.warning("No data found with the selected filters")
+        else:
+            st.dataframe(
+                presenter_df, hide_index=True, use_container_width=True, column_config=column_config
+            )
         st.header("Companies")
-        st.dataframe(
-            company_df, hide_index=True, use_container_width=True, column_config=column_config
-        )
+        if company_df.empty:
+            st.warning("No data found with the selected filters")
+        else:
+            st.dataframe(
+                company_df, hide_index=True, use_container_width=True, column_config=column_config
+            )
 
         df_dict = {"events": db.event_df, "presenters": db.presenter_df, "companies": db.company_df}
         now_str = pd.Timestamp.now().strftime("%Y-%m-%d-%H-%M-%S")

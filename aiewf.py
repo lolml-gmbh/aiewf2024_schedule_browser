@@ -47,8 +47,9 @@ class AIEWF:
             "trackName",
             "presenters",
             "company",
-            "about",
             "room",
+            "link",
+            "about",
             "since",
             "till",
             "slug",
@@ -84,7 +85,6 @@ class AIEWF:
             event_data["company"] = ", ".join(presenter_companies)
             event_records.append(event_data)
 
-        event_cols.append("link")
         event_cols.remove("slug")
         self.event_df = pd.DataFrame.from_records(event_records, columns=event_cols)
         self.event_df["since"] = pd.to_datetime(self.event_df["since"])
