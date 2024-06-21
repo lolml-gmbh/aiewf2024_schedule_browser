@@ -71,23 +71,20 @@ def main() -> None:
 
     db = get_db()
 
-    # st.header("Stats")
-    # col0, col1 = st.columns(2)
-    # col0.metric("Events", db.num_events)
-    # col1.metric("Presenters", db.num_presenters)
-
     st.subheader("Filters")
 
     st.caption("Empty filter will select all avaiable data")
 
-    selected_tracks = st.multiselect("Track", db.tracks)
-    selected_dates = st.multiselect("Date", db.dates)
-    selected_rooms = st.multiselect("Room", db.event_rooms)
-    selected_companies = st.multiselect("Company", db.companies)
+    selected_tracks = st.sidebar.multiselect("Track", db.tracks)
+    selected_dates = st.sidebar.multiselect("Date", db.dates)
+    selected_rooms = st.sidebar.multiselect("Room", db.event_rooms)
+    selected_companies = st.sidebar.multiselect("Company", db.companies)
 
     st.subheader("Event data")
 
     event_df = db.event_df
+    presenter_df = db.presenter_df
+    company_df = db.company_df
     event_base_name = "event_df"
     if selected_tracks:
         event_df = event_df[event_df["trackName"].isin(selected_tracks)]
@@ -103,28 +100,32 @@ def main() -> None:
         event_base_name += f"_rooms_{selected_rooms_str}"
     if selected_companies:
         event_df = event_df[event_df["company"].isin(selected_companies)]
+        presenter_df = presenter_df[presenter_df["company"].isin(selected_companies)]
+        company_df = company_df[company_df["name"].isin(selected_companies)]
         selected_companies_str = "-".join(selected_companies)
         event_base_name += f"_companies_{selected_companies_str}"
-
-    if event_df.empty:
-        st.warning("No data found with the selected filters")
-    else:
-        st.dataframe(event_df, hide_index=True, use_container_width=True)
-        display_df_download_buttons(event_df, event_base_name)
 
     column_config = {
         "link": st.column_config.LinkColumn("link"),
         "socialLinks": st.column_config.LinkColumn("socialLinks"),
     }
+    if event_df.empty:
+        st.warning("No data found with the selected filters")
+    else:
+        st.dataframe(
+            event_df, hide_index=True, use_container_width=True, column_config=column_config
+        )
+        display_df_download_buttons(event_df, event_base_name)
+
     if bool(os.getenv("SHOW_MORE", False)):
         st.header("Presenters")
         st.dataframe(
-            db.presenter_df, hide_index=True, use_container_width=True, column_config=column_config
+            presenter_df, hide_index=True, use_container_width=True, column_config=column_config
         )
 
         st.header("Companies")
         st.dataframe(
-            db.company_df, hide_index=True, use_container_width=True, column_config=column_config
+            company_df, hide_index=True, use_container_width=True, column_config=column_config
         )
 
         df_dict = {"events": db.event_df, "presenters": db.presenter_df, "companies": db.company_df}
@@ -135,6 +136,7 @@ def main() -> None:
             file_name=f"{now_str}-aiewf_export.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         )
+        st.caption("(Filters are not applied)")
 
     st.markdown(COPYRIGHT_LINE)
     st.write("Legal Notice")

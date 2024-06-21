@@ -21,6 +21,7 @@ def fix_social_link(link: str) -> str:
 
 class AIEWF:
     schedule_url = "https://www.ai.engineer/worldsfair/2024/schedule"
+    event_base_url = "https://www.ai.engineer/worldsfair/2024/schedule/"
 
     def __init__(self):
         session = requests.Session()
@@ -50,12 +51,16 @@ class AIEWF:
             "room",
             "since",
             "till",
+            "slug",
         ]
         event_records = []
         self.presenter_dict = {}
         self.company_dict = {}
         for event in events:
-            rec = {k: v for k, v in event.items() if k in event_cols}
+            event_data = {k: v for k, v in event.items() if k in event_cols}
+            if event_data["slug"]:
+                event_data["link"] = self.event_base_url + event_data["slug"]
+            del event_data["slug"]
             presenter_names = set()
             presenter_companies = set()
             for presenter in event["presenters"]:
@@ -75,10 +80,12 @@ class AIEWF:
                 if company_id not in self.company_dict:
                     self.company_dict[company_id] = company_data
                 self.presenter_dict[presenter["id"]] = presenter_data
-            rec["presenters"] = ", ".join(presenter_names)
-            rec["company"] = ", ".join(presenter_companies)
-            event_records.append(rec)
+            event_data["presenters"] = ", ".join(presenter_names)
+            event_data["company"] = ", ".join(presenter_companies)
+            event_records.append(event_data)
 
+        event_cols.append("link")
+        event_cols.remove("slug")
         self.event_df = pd.DataFrame.from_records(event_records, columns=event_cols)
         self.event_df["since"] = pd.to_datetime(self.event_df["since"])
         self.event_df["till"] = pd.to_datetime(self.event_df["till"])
@@ -108,19 +115,19 @@ class AIEWF:
 
     @property
     def tracks(self) -> list[str]:
-        return self.event_df["trackName"].unique().tolist()
+        return sorted(self.event_df["trackName"].unique().tolist())
 
     @property
     def companies(self) -> list[str]:
-        return self.company_df["name"].unique().tolist()
+        return sorted(self.company_df["name"].unique().tolist())
 
     @property
     def event_rooms(self) -> list[str]:
-        return self.event_df["room"].unique().tolist()
+        return sorted(self.event_df["room"].unique().tolist())
 
     @property
     def dates(self) -> list[str]:
-        return self.event_df["date"].unique().tolist()
+        return sorted(self.event_df["date"].unique().tolist())
 
 
 def convert_dataframe_to_csv(df: pd.DataFrame, include_index: bool = False) -> str:
