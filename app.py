@@ -69,6 +69,7 @@ def main() -> None:
     st.logo("lolml.png", link="https://lolml.com/")
     st.markdown(APP_DESC)
 
+    db = get_db()
     selected_tracks = st.sidebar.multiselect("Track", db.tracks)
     selected_dates = st.sidebar.multiselect("Date", db.dates)
     selected_rooms = st.sidebar.multiselect("Room", db.event_rooms)
@@ -77,7 +78,6 @@ def main() -> None:
         "Empty filter will select all available data. Multiple selections are supported."
     )
 
-    db = get_db()
     st.header("Events")
     event_df = db.event_df
     presenter_df = db.presenter_df
