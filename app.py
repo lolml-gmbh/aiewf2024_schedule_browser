@@ -69,28 +69,43 @@ def display_df_download_buttons(df: pd.DataFrame, base_name: str, include_index:
     )
 
 
+ENABLE_FAV_EVENTS = bool(os.getenv("ENABLE_FAV_EVENTS", False))
 FAV_EVENTS_FILE = "fav_events.txt"
 
 
 class FavEvents:
     def __init__(self):
         self.event_ids: set[str] = set()
-        self.modified = False
+        self.saved = False
         self.load()
+
+    def __contains__(self, item) -> bool:
+        return item in self.event_ids
+
+    def __iter__(self):
+        return iter(self.event_ids)
+
+    def update(self, event_ids: set[str]) -> None:
+        event_ids = set(event_ids)
+        if event_ids != self.event_ids:
+            self.saved = False
+        self.event_ids = event_ids
+        if not self.saved:
+            self.save()
 
     def add(self, event_id: str) -> None:
         self.event_ids.add(event_id)
-        self.modified = True
+        self.saved = True
 
     def remove(self, event_id: str) -> None:
         self.event_ids.remove(event_id)
-        self.modified = True
+        self.saved = True
 
     def save(self) -> None:
-        if not self.modified:
+        if self.saved:
             return
         with open(FAV_EVENTS_FILE, "w") as f:
-            f.write("\n".join(self.event_ids))
+            f.write("\n".join(sorted(self.event_ids)))
 
     def load(self) -> None:
         try:
@@ -105,17 +120,16 @@ def main() -> None:
     st.logo("lolml.png", link="https://lolml.com/")
     st.markdown(APP_DESC)
 
-    enable_fav_events = bool(os.getenv("ENABLE_FAV_EVENTS", False))
     db = get_db()
     if st.session_state.get("event_df", None) is None:
         st.session_state.event_df = db.event_df.copy()
         event_df = st.session_state.event_df
-        if enable_fav_events:
+        if ENABLE_FAV_EVENTS:
             event_df.insert(loc=0, column="fav", value=False)
             event_df[COL_FAV] = False
             st.session_state.fav_events = FavEvents()
             fav_events = st.session_state.fav_events
-            event_df.loc[event_df["title"].isin(fav_events.event_ids), COL_FAV] = True
+            event_df.loc[event_df["title"].isin(fav_events), COL_FAV] = True
 
     event_df = st.session_state.event_df
     selected_tracks = st.sidebar.multiselect("Track", db.tracks)
@@ -125,6 +139,12 @@ def main() -> None:
     st.sidebar.caption(
         "Empty filter will select all available data. Multiple selections are supported."
     )
+    if ENABLE_FAV_EVENTS:
+        show_fav_only = st.sidebar.checkbox(
+            "Show only favorite events", value=False, key="fav_only"
+        )
+    else:
+        show_fav_only = False
 
     st.header("Events")
     presenter_df = db.presenter_df
@@ -148,6 +168,8 @@ def main() -> None:
         company_df = company_df[company_df["name"].isin(selected_companies)]
         selected_companies_str = "-".join(selected_companies)
         event_base_name += f"_companies_{selected_companies_str}"
+    if ENABLE_FAV_EVENTS and show_fav_only:
+        event_df = event_df[event_df[COL_FAV]]
 
     column_config = {
         "link": st.column_config.LinkColumn("link"),
@@ -156,28 +178,28 @@ def main() -> None:
     if event_df.empty:
         st.warning("No data found with the selected filters")
     else:
-        if enable_fav_events:
+        if ENABLE_FAV_EVENTS:
             non_editable_cols = list(event_df.columns)
             non_editable_cols.remove(COL_FAV)
-            st.data_editor(
+            edited_event_df = st.data_editor(
                 event_df,
                 hide_index=True,
                 use_container_width=True,
                 column_config=column_config,
                 disabled=non_editable_cols,
             )
+            display_df_download_buttons(edited_event_df, event_base_name)
             fav_events = st.session_state.fav_events
-            fav_event_titles = event_df[event_df[COL_FAV]]["title"].tolist()
-            for fav_title in fav_event_titles:
-                fav_events.add(fav_title)
-            if fav_events.modified:
-                fav_events.save()
+            fav_event_titles = edited_event_df[edited_event_df[COL_FAV]]["title"].tolist()
+            fav_events.update(fav_event_titles)
+            event_df = st.session_state.event_df
+            event_df.loc[:, COL_FAV] = False
+            event_df.loc[event_df["title"].isin(fav_event_titles), COL_FAV] = True
         else:
             st.dataframe(
                 event_df, hide_index=True, use_container_width=True, column_config=column_config
             )
-
-        display_df_download_buttons(event_df, event_base_name)
+            display_df_download_buttons(event_df, event_base_name)
 
     if bool(os.getenv("SHOW_PRESENTERS", False)):
         st.header("Presenters")

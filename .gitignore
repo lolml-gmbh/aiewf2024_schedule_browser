@@ -1,5 +1,6 @@
 ### project specific ignores
 
+fav_events.txt
 *.xlsx
 projects/
 idoc/**/*.txt
