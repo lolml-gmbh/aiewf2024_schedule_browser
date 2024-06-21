@@ -69,8 +69,6 @@ def main() -> None:
     st.logo("lolml.png", link="https://lolml.com/")
     st.markdown(APP_DESC)
 
-    db = get_db()
-
     selected_tracks = st.sidebar.multiselect("Track", db.tracks)
     selected_dates = st.sidebar.multiselect("Date", db.dates)
     selected_rooms = st.sidebar.multiselect("Room", db.event_rooms)
@@ -79,8 +77,8 @@ def main() -> None:
         "Empty filter will select all available data. Multiple selections are supported."
     )
 
-    st.subheader("Events")
-
+    db = get_db()
+    st.header("Events")
     event_df = db.event_df
     presenter_df = db.presenter_df
     company_df = db.company_df
@@ -116,7 +114,7 @@ def main() -> None:
         )
         display_df_download_buttons(event_df, event_base_name)
 
-    if bool(os.getenv("SHOW_MORE", False)):
+    if bool(os.getenv("SHOW_PRESENTERS", False)):
         st.header("Presenters")
         if presenter_df.empty:
             st.warning("No data found with the selected filters")
@@ -124,23 +122,24 @@ def main() -> None:
             st.dataframe(
                 presenter_df, hide_index=True, use_container_width=True, column_config=column_config
             )
-        st.header("Companies")
-        if company_df.empty:
-            st.warning("No data found with the selected filters")
-        else:
-            st.dataframe(
-                company_df, hide_index=True, use_container_width=True, column_config=column_config
-            )
 
-        df_dict = {"events": db.event_df, "presenters": db.presenter_df, "companies": db.company_df}
-        now_str = pd.Timestamp.now().strftime("%Y-%m-%d-%H-%M-%S")
-        st.download_button(
-            label="Download all data as Excel",
-            data=convert_df_dict_to_excel(df_dict),
-            file_name=f"{now_str}-aiewf_export.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    st.header("Companies")
+    if company_df.empty:
+        st.warning("No data found with the selected filters")
+    else:
+        st.dataframe(
+            company_df, hide_index=True, use_container_width=True, column_config=column_config
         )
-        st.caption("(Filters are not applied)")
+
+    df_dict = {"events": db.event_df, "presenters": db.presenter_df, "companies": db.company_df}
+    now_str = pd.Timestamp.now().strftime("%Y-%m-%d-%H-%M-%S")
+    st.download_button(
+        label="Download all data as Excel",
+        data=convert_df_dict_to_excel(df_dict),
+        file_name=f"{now_str}-aiewf_export.xlsx",
+        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    )
+    st.caption("(Filters are not applied)")
 
     st.markdown(COPYRIGHT_LINE)
     st.write("Legal Notice")
