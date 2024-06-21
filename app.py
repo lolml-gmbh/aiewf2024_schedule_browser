@@ -69,7 +69,7 @@ def display_df_download_buttons(df: pd.DataFrame, base_name: str, include_index:
     )
 
 
-ENABLE_FAV_EVENTS = bool(os.getenv("ENABLE_FAV_EVENTS", False))
+ENABLE_FAV_EVENTS = bool(int(os.getenv("ENABLE_FAV_EVENTS", 0)))
 FAV_EVENTS_FILE = "fav_events.txt"
 
 
@@ -201,7 +201,7 @@ def main() -> None:
             )
             display_df_download_buttons(event_df, event_base_name)
 
-    if bool(os.getenv("SHOW_PRESENTERS", False)):
+    if bool(int(os.getenv("SHOW_PRESENTERS", False))):
         st.header("Presenters")
         if presenter_df.empty:
             st.warning("No data found with the selected filters")
