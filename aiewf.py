@@ -62,12 +62,24 @@ class AIEWF:
             if event_data["slug"]:
                 event_data["link"] = self.event_base_url + event_data["slug"]
             del event_data["slug"]
+            event_data["about"] = (
+                event_data["about"].replace("\n", " ").replace("  ", " ")
+                if event_data["about"]
+                else ""
+            )
             presenter_names = set()
             presenter_companies = set()
             for presenter in event["presenters"]:
                 presenter_data = presenter["attributes"]
                 presenter_data["socialLinks"] = fix_social_link(
                     presenter_data.get("socialLinks", "")
+                )
+
+                presenter_about = presenter_data["about"]
+                presenter_data["about"] = (
+                    presenter_about.replace("\n", " ").replace("  ", " ")
+                    if (presenter_about)
+                    else ""
                 )
                 presenter_names.add(presenter_data["name"].strip())
                 self.presenter_dict[presenter["id"]] = presenter_data
@@ -93,7 +105,6 @@ class AIEWF:
         self.event_df["room"] = self.event_df["room"].fillna("Unknown")
         self.event_df["presenters"] = self.event_df["presenters"].fillna("NA")
         self.event_df["company"] = self.event_df["company"].fillna("NA")
-        self.event_df["about"] = self.event_df["about"].fillna("")
         self.event_df.sort_values(by="since", inplace=True, ascending=True)
         self.presenter_df = pd.DataFrame.from_records(
             list(self.presenter_dict.values()),
